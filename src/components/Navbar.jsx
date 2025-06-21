@@ -1,4 +1,3 @@
-import React from 'react'
 import BrainIcon from '../assets/brain.png'
 
 export default function Navbar({ darkMode, onMainMenu }) {
