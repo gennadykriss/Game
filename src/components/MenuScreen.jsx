@@ -12,7 +12,10 @@ export default function MenuScreen() {
 
   return (
     <div className={`${darkMode ? 'bg-gray-900 text-white' : 'bg-white text-gray-900'} min-h-screen flex flex-col`}> 
-      <Navbar darkMode={darkMode} />
+        <Navbar 
+            darkMode={darkMode} 
+            onMainMenu={() => setShowGame(false)} 
+        />
 
       {!showGame ? (
         <main className="flex-grow flex flex-col items-center justify-center px-4">
