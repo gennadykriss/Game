@@ -1,6 +1,7 @@
 // src/components/MemoryGame.jsx
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+
 // Define icons
 const ICON_SETS = {
   Normal: [
@@ -27,10 +28,10 @@ const ICON_SETS = {
 
 // Map difficulties to total cards
 const DIFFICULTY_LEVELS = {
-  Easy: 12,
-  Medium: 20,
-  Hard: 36,
-  'Very Hard': 49,
+  Easy:       12,
+  Medium:     20,
+  Hard:       36,
+  'Very Hard':54,         // ← corrected from 49 → 54
 };
 
 // Fisher–Yates shuffle
@@ -45,61 +46,68 @@ function shuffleArray(array) {
 
 export default function MemoryGame({
   difficulty = 'Easy',
-  iconSet = 'Normal',
+  iconSet    = 'Normal',
   matchCount = 2,
 }) {
-  // derive total cards and how many full groups of matchCount
+  // derive our numbers
   const totalCards = DIFFICULTY_LEVELS[difficulty] || DIFFICULTY_LEVELS.Easy;
   const groupCount = Math.floor(totalCards / matchCount);
+  const cols       = Math.ceil(Math.sqrt(totalCards));
 
-  const [cards, setCards] = useState([]);
-  const [flipped, setFlipped] = useState([]);
-  const [matched, setMatched] = useState([]);
-  const [moves, setMoves] = useState(0);
+  // state
+  const [cards,    setCards]    = useState([]);
+  const [flipped,  setFlipped]  = useState([]);
+  const [matched,  setMatched]  = useState([]);
+  const [moves,    setMoves]    = useState(0);
   const [disabled, setDisabled] = useState(false);
 
-  // rebuild deck on difficulty, iconSet, or matchCount change
-  useEffect(() => {
-    const icons = ICON_SETS[iconSet] || ICON_SETS.Normal;
-    const shuffledIcons = shuffleArray(icons);
+  // deck builder
+  const initializeDeck = useCallback(() => {
+    const icons    = ICON_SETS[iconSet] || ICON_SETS.Normal;
+    const shuffled = shuffleArray(icons);
 
-    // select icons for each match group
-    const groupIcons = shuffledIcons.slice(0, groupCount);
-
-    // calculate leftover decoys
-    const leftover = totalCards - groupCount * matchCount;
-    const decoys = shuffleArray(
-      shuffledIcons.filter((i) => !groupIcons.includes(i))
+    const groupIcons = shuffled.slice(0, groupCount);
+    const leftover   = totalCards - groupCount * matchCount;
+    const decoys     = shuffleArray(
+      shuffled.filter(i => !groupIcons.includes(i))
     ).slice(0, leftover);
 
-    // build deck: each group icon appears matchCount times, plus decoys
-    const deck = shuffleArray([
-      ...groupIcons.flatMap((icon) => Array(matchCount).fill(icon)),
+    const newDeck = shuffleArray([
+      ...groupIcons.flatMap(icon => Array(matchCount).fill(icon)),
       ...decoys,
-    ]).map((icon, i) => ({ icon, id: i }));
+    ]).map((icon, idx) => ({ icon, id: idx }));
 
-    setCards(deck);
+    setCards(newDeck);
     setFlipped([]);
     setMatched([]);
     setMoves(0);
     setDisabled(false);
-  }, [difficulty, iconSet, matchCount, totalCards, groupCount]);
+  }, [iconSet, groupCount, totalCards, matchCount]);
 
-  // handle card click
-  function handleClick(idx) {
+  // init on prop changes
+  useEffect(() => {
+    initializeDeck();
+  }, [initializeDeck]);
+
+  // restart handler
+  const handleRestart = () => {
+    initializeDeck();
+  };
+
+  // click logic
+  const handleClick = idx => {
     if (disabled || flipped.includes(idx) || matched.includes(idx)) return;
-    const newFlipped = [...flipped, idx];
-    setFlipped(newFlipped);
+    const nextFlipped = [...flipped, idx];
+    setFlipped(nextFlipped);
 
-    if (newFlipped.length === matchCount) {
+    if (nextFlipped.length === matchCount) {
       setDisabled(true);
-      setMoves((m) => m + 1);
+      setMoves(m => m + 1);
 
-      // check if all flipped cards match
-      const firstIcon = cards[newFlipped[0]].icon;
-      const allMatch = newFlipped.every((i) => cards[i].icon === firstIcon);
+      const firstIcon = cards[nextFlipped[0]].icon;
+      const allMatch  = nextFlipped.every(i => cards[i].icon === firstIcon);
       if (allMatch) {
-        setMatched((m) => [...m, ...newFlipped]);
+        setMatched(m => [...m, ...nextFlipped]);
       }
 
       setTimeout(() => {
@@ -107,10 +115,9 @@ export default function MemoryGame({
         setDisabled(false);
       }, 1000);
     }
-  }
+  };
 
   const hasWon = matched.length >= groupCount * matchCount;
-  const cols = Math.ceil(Math.sqrt(totalCards));
 
   return (
     <div className="flex flex-col items-center w-full">
@@ -120,9 +127,7 @@ export default function MemoryGame({
 
       <div
         className="grid gap-4 w-full max-w-screen-lg"
-        style={{
-          gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`,
-        }}
+        style={{ gridTemplateColumns: `repeat(${cols}, minmax(0,1fr))` }}
       >
         {cards.map((card, idx) => {
           const revealed = flipped.includes(idx) || matched.includes(idx);
@@ -152,7 +157,7 @@ export default function MemoryGame({
       )}
 
       <button
-        onClick={() => setCards(shuffleArray(cards))}
+        onClick={handleRestart}
         className="mt-6 bg-blue-500 hover:bg-blue-400 text-white font-semibold px-6 py-2 rounded-full"
       >
         Restart
