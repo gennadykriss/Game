@@ -83,7 +83,7 @@ export default function MenuScreen() {
             {/* Icons */}
             <div>
               <h2 className="text-2xl font-semibold mb-4">Icons</h2>
-              {['Normal', 'Emojis', 'Animals', 'Colours'].map((set) => (
+              {['Normal', 'Emojis', 'Animals', 'Food'].map((set) => (
                 <button
                   key={set}
                   onClick={() => setIconSet(set)}
@@ -146,6 +146,8 @@ export default function MenuScreen() {
             difficulty={difficulty}
             iconSet={iconSet}
             matchCount={matchCount}
+            darkMode={darkMode}
+            onMainMenu={() => setShowGame(false)}
         />
 
           <button
