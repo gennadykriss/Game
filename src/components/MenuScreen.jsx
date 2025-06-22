@@ -162,7 +162,9 @@ export default function MenuScreen() {
       {/* Footer */}
       <footer className="px-8 py-4 text-sm flex flex-col md:flex-row justify-between text-gray-500">
         <div>© 2025 NeuroMatch</div>
-        <div>Follow Us On Social Media</div>
+        <div className="absolute left-1/2 transform -translate-x-1/2 text-center">
+          Follow Us On Social Media
+          </div>
         <div>Designers: Gennady Kriss, David McIntyre-Garcia</div>
       </footer>
     </div>
