@@ -48,6 +48,8 @@ export default function MemoryGame({
   difficulty = 'Easy',
   iconSet    = 'Normal',
   matchCount = 2,
+  darkMode   = false,
+  onMainMenu = () => {},
 }) {
   // derive our numbers
   const totalCards = DIFFICULTY_LEVELS[difficulty] || DIFFICULTY_LEVELS.Easy;
@@ -60,11 +62,14 @@ export default function MemoryGame({
   const [matched,  setMatched]  = useState([]);
   const [moves,    setMoves]    = useState(0);
   const [disabled, setDisabled] = useState(false);
+  const [time, setTime] = useState(0);
+  const [score, setScore] = useState(0);
 
   // deck builder
   const initializeDeck = useCallback(() => {
     const icons    = ICON_SETS[iconSet] || ICON_SETS.Normal;
     const shuffled = shuffleArray(icons);
+    setScore(0);
 
     const groupIcons = shuffled.slice(0, groupCount);
     const leftover   = totalCards - groupCount * matchCount;
@@ -81,6 +86,7 @@ export default function MemoryGame({
     setFlipped([]);
     setMatched([]);
     setMoves(0);
+    setTime(0);
     setDisabled(false);
   }, [iconSet, groupCount, totalCards, matchCount]);
 
@@ -88,6 +94,18 @@ export default function MemoryGame({
   useEffect(() => {
     initializeDeck();
   }, [initializeDeck]);
+
+  // timer
+  useEffect(() => {
+    if (matched.length === groupCount * matchCount) {
+      return;
+    }
+    const interval = setInterval(() => {
+      setTime(t => t + 1);
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [matched, groupCount, matchCount]);
 
   // restart handler
   const handleRestart = () => {
@@ -108,6 +126,9 @@ export default function MemoryGame({
       const allMatch  = nextFlipped.every(i => cards[i].icon === firstIcon);
       if (allMatch) {
         setMatched(m => [...m, ...nextFlipped]);
+        setScore(s => s + 100);
+      } else {
+        setScore(s => Math.max(0, s - 10));
       }
 
       setTimeout(() => {
@@ -118,12 +139,22 @@ export default function MemoryGame({
   };
 
   const hasWon = matched.length >= groupCount * matchCount;
+  const minutes = Math.floor(time / 60).toString().padStart(2, '0');
+  const seconds = (time % 60).toString().padStart(2, '0');
+  const misses = moves - Math.floor(matched.length / matchCount);
+
 
   return (
     <div className="flex flex-col items-center w-full">
       <h2 className="text-2xl font-semibold mb-4">
         Moves: {moves} — collect {matchCount} of a kind!
       </h2>
+
+      <div className="text-lg font-medium mb-4 flex gap-6">
+      <div>⏳ Time: {minutes}:{seconds}</div>
+      <div>🏆 Score: {score}</div>
+      </div>
+      
 
       <div
         className="grid gap-4 w-full max-w-screen-lg"
@@ -150,12 +181,23 @@ export default function MemoryGame({
       </div>
 
       {hasWon && (
-        <div className="mt-6 text-xl font-bold text-green-500">
-          🎉 You matched {groupCount} set
-          {groupCount > 1 ? 's' : ''} of {matchCount} in {moves} moves! 🎉
+        <div className="fixed inset-0 flex items-center justify-center z-50 ${darkMode ? 'bg-black bg-opacity-40' : 'bg-gray-300 bg-opacity-40'}">
+          <div className={`rounded-lg p-8 max-w-sm w-full text-center shadow-lg ${darkMode ? 'bg-gray-800 text-white' : 'bg-white text-gray-900'}`}>
+            <h2 className="text-3xl font-bold mb-4 text-green-600">You Win! 🎉</h2>
+            <p className="mb-2 text-lg">⏳ Time: {minutes}:{seconds}</p>
+            <p className="mb-2 text-lg">🏆 Score: {score}</p>
+            <p className="mb-6 text-lg">❌ Misses: {misses}</p>
+            <div className="flex gap-4">
+              <button onClick={handleRestart} className="flex-1 bg-blue-500 hover:bg-blue-400 text-white font-semibold text-xl py-3 rounded-full transition">
+                Restart
+              </button>
+              <button onClick={onMainMenu} className="flex-1 bg-green-400 hover:bg-green-300 text-gray-900 font-semibold text-xl py-3 rounded-full transition">
+                Menu
+              </button>
+            </div>
+          </div>
         </div>
-      )}
-
+    )}
       <button
         onClick={handleRestart}
         className="mt-6 bg-blue-500 hover:bg-blue-400 text-white font-semibold px-6 py-2 rounded-full"

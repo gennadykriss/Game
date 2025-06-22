@@ -146,6 +146,8 @@ export default function MenuScreen() {
             difficulty={difficulty}
             iconSet={iconSet}
             matchCount={matchCount}
+            darkMode={darkMode}
+            onMainMenu={() => setShowGame(false)}
         />
 
           <button
