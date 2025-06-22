@@ -31,7 +31,7 @@ const DIFFICULTY_LEVELS = {
   Easy:       12,
   Medium:     20,
   Hard:       36,
-  'Very Hard':54,         // ← corrected from 49 → 54
+  'Very Hard':49,       
 };
 
 // Fisher–Yates shuffle

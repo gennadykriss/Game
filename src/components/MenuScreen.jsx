@@ -1,4 +1,3 @@
-import React, { useState } from 'react';
 import BrainIcon from '../assets/brain.png';
 import Navbar from './Navbar';
 import MemoryGame from './MemoryGame';
