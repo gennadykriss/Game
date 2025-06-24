@@ -165,7 +165,7 @@ export default function MenuScreen() {
         <div className="absolute left-1/2 transform -translate-x-1/2 text-center">
           Follow Us On Social Media
           </div>
-        <div>Designers: Gennady Kriss, David McIntyre-Garcia</div>
+        <div>Designers: 230083075, 300241605</div>
       </footer>
     </div>
   );
